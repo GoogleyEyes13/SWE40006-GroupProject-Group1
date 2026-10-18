@@ -1,170 +1,297 @@
+
 (() => {
-  const statuses = [
-    ['want_to_read', 'Want to Read'],
-    ['owned', 'Owned'],
-    ['reading', 'Reading'],
-    ['read', 'Read']
-  ];
+    const statuses = [
+        ['want_to_read', 'Want To Read'],
+        ['owned', 'Owned'],
+        ['reading', 'Reading'],
+        ['read', 'Read']
+    ];
 
-  function element(tag, className, text) {
-    const item = document.createElement(tag);
-    if (className) item.className = className;
-    if (text !== undefined) item.textContent = text;
-    return item;
-  }
-
-  function init() {
-    let results = document.getElementById('collection-results');
-    if (!results) {
-      results = element('section', 'container-fluid py-4');
-      results.id = 'collection-results';
-      const heading = [...document.querySelectorAll('h2')]
-        .find(item => item.textContent.trim() === 'My Collection');
-      if (heading) {
-        const placeholder = heading.nextElementSibling;
-        if (placeholder?.textContent.trim() === 'My Collection Content') placeholder.remove();
-        heading.after(results);
-      } else {
-        document.body.append(results);
-      }
-    }
-    results.setAttribute('aria-live', 'polite');
-
-    let currentLoad = 0;
-
-    async function load() {
-      const loadId = ++currentLoad;
-      results.textContent = 'Loading collection...';
-      try {
-        const data = await window.BookManager.request('library.php');
-        if (loadId !== currentLoad) return;
-        render(Array.isArray(data.books) ? data.books : []);
-      } catch (error) {
-        if (loadId === currentLoad) {
-          results.textContent = error.message === 'Authentication required'
-            ? 'Log in to view your collection.'
-            : error.message;
-        }
-      }
+    function element(tag, className, text) {
+        const item = document.createElement(tag);
+        if (className) item.className = className;
+        if (text !== undefined) item.textContent = text;
+        return item;
     }
 
-    function render(books) {
-      results.replaceChildren();
-      if (!books.length) {
-        results.append(element('p', '', 'Your collection is empty. Search for books in Library.'));
-        return;
-      }
-      const grid = element('div', 'row g-3');
-      for (const book of books) {
-        const column = element('div', 'col-12 col-md-6 col-lg-4');
-        const card = element('article', 'card h-100');
-        const body = element('div', 'card-body');
-        body.append(element('h3', 'h5 card-title', book.title || 'Untitled'));
-        body.append(element('p', 'card-text', book.author || 'Author unknown'));
+    function init() {
+        const table = document.querySelector('.collection-table');
+        const tbody = table?.querySelector('tbody');
 
-        if (Number.isSafeInteger(Number(book.cover_id)) && Number(book.cover_id) > 0) {
-          const cover = element('img', 'card-img-top');
-          cover.src = `https://covers.openlibrary.org/b/id/${Number(book.cover_id)}-M.jpg`;
-          cover.alt = `Cover of ${book.title || 'book'}`;
-          cover.loading = 'lazy';
-          cover.style.cssText = 'max-height:220px;object-fit:contain;padding:12px';
-          card.append(cover);
-        }
-
-        const statusLabel = element('label', 'form-label mt-2', 'Reading status');
-        const status = element('select', 'form-select mb-2');
-        for (const [value, label] of statuses) {
-          const option = element('option', '', label);
-          option.value = value;
-          status.append(option);
-        }
-        status.value = book.status;
-        const quantityLabel = element('label', 'form-label', 'Quantity');
-        const quantity = element('input', 'form-control mb-3');
-        quantity.type = 'number';
-        quantity.min = '0';
-        quantity.max = '1000';
-        quantity.step = '1';
-        quantity.value = String(book.quantity ?? 0);
-        status.addEventListener('change', () => {
-          if (status.value !== 'want_to_read' && Number(quantity.value) === 0) {
-            quantity.value = '1';
-          }
-        });
-
-        const actions = element('div', 'd-flex gap-2');
-        const save = element('button', 'btn btn-primary btn-sm', 'Save changes');
-        save.type = 'button';
-        const remove = element('button', 'btn btn-outline-danger btn-sm', 'Remove');
-        remove.type = 'button';
-        const message = element('p', 'small mt-2 mb-0');
-
-        save.addEventListener('click', async () => {
-          const amount = Number(quantity.value);
-          if (!Number.isInteger(amount) || amount < 0 || amount > 1000) {
-            message.textContent = 'Quantity must be a whole number from 0 to 1000.';
+        if (!table || !tbody) {
+            console.error('Collection table or tbody was not found.');
             return;
-          }
-          save.disabled = true;
-          message.textContent = '';
-          try {
-            await window.BookManager.request('library.php', {
-              action: 'update',
-              book_id: Number(book.id),
-              status: status.value,
-              quantity: amount
-            });
-            message.textContent = 'Saved.';
-          } catch (error) {
-            message.textContent = error.message;
-          } finally {
-            save.disabled = false;
-          }
+        }
+
+        let currentLoad = 0;
+
+        function showMessage(message) {
+            tbody.replaceChildren();
+
+            const row = element('tr');
+            const cell = element('td', 'collection-message', message);
+            cell.colSpan = 4;
+
+            row.append(cell);
+            tbody.append(row);
+        }
+
+        async function load() {
+            const loadId = ++currentLoad;
+            showMessage('Loading your collection...');
+
+            try {
+                const data = await window.BookManager.request('library.php');
+
+                if (loadId !== currentLoad) return;
+
+                render(Array.isArray(data.books) ? data.books : []);
+            } catch (error) {
+                if (loadId !== currentLoad) return;
+
+                showMessage(
+                    error.message === 'Authentication required'
+                        ? 'Log in to view your collection.'
+                        : error.message
+                );
+            }
+        }
+
+        function render(books) {
+            tbody.replaceChildren();
+
+            if (!books.length) {
+                showMessage(
+                    'Your collection is empty. Search for books in Library.'
+                );
+                return;
+            }
+
+            const row = element('tr');
+
+            for (const [statusValue, statusName] of statuses) {
+                const cell = element('td', 'collection-status-column');
+                const statusBooks = books.filter(
+                    book => book.status === statusValue
+                );
+
+                if (!statusBooks.length) {
+                    cell.append(
+                        element('p', 'collection-empty', 'No books here yet.')
+                    );
+                }
+
+                for (const book of statusBooks) {
+                    const card = element('article', 'collection-book');
+
+                    if (
+                        book.cover_id &&
+                        Number.isSafeInteger(Number(book.cover_id)) &&
+                        Number(book.cover_id) > 0
+                    ) {
+                        const cover = element('img', 'collection-book-cover');
+                        cover.src =
+                            `https://covers.openlibrary.org/b/id/${Number(book.cover_id)}-M.jpg`;
+                        cover.alt = `Cover of ${book.title || 'book'}`;
+                        cover.loading = 'lazy';
+                        card.append(cover);
+                    }
+
+                    const title = element(
+                        'h3',
+                        'collection-book-title',
+                        book.title || 'Untitled'
+                    );
+
+                    const author = element(
+                        'p',
+                        'collection-book-author',
+                        book.author || 'Author unknown'
+                    );
+
+                    card.append(title, author);
+
+                    const statusLabel = element(
+                        'label',
+                        'form-label collection-label',
+                        'Reading status'
+                    );
+
+                    const status = element(
+                        'select',
+                        'form-select collection-input'
+                    );
+
+                    status.id = `collection-status-${book.id}`;
+                    statusLabel.htmlFor = status.id;
+
+                    for (const [value, label] of statuses) {
+                        const option = element('option', '', label);
+                        option.value = value;
+                        status.append(option);
+                    }
+
+                    status.value = statuses.some(
+                        ([value]) => value === book.status
+                    ) ? book.status : statusValue;
+
+                    const quantityLabel = element(
+                        'label',
+                        'form-label collection-label',
+                        'Quantity'
+                    );
+
+                    const quantity = element(
+                        'input',
+                        'form-control collection-input'
+                    );
+
+                    quantity.id = `collection-quantity-${book.id}`;
+                    quantityLabel.htmlFor = quantity.id;
+                    quantity.type = 'number';
+                    quantity.min = '0';
+                    quantity.max = '1000';
+                    quantity.step = '1';
+                    quantity.value = String(book.quantity ?? 0);
+
+                    status.addEventListener('change', () => {
+                        if (
+                            status.value !== 'want_to_read' &&
+                            Number(quantity.value) === 0
+                        ) {
+                            quantity.value = '1';
+                        }
+                    });
+
+                    const actions = element(
+                        'div',
+                        'collection-actions'
+                    );
+
+                    const save = element(
+                        'button',
+                        'btn collection-button',
+                        'Save Changes'
+                    );
+
+                    save.type = 'button';
+
+                    const remove = element(
+                        'button',
+                        'btn collection-remove-button',
+                        'Remove'
+                    );
+
+                    remove.type = 'button';
+
+                    const message = element(
+                        'p',
+                        'collection-feedback',
+                        ''
+                    );
+                    message.setAttribute('role', 'status');
+
+                    save.addEventListener('click', async () => {
+                        const amount = Number(quantity.value);
+
+                        if (
+                            !Number.isInteger(amount) ||
+                            amount < 0 ||
+                            amount > 1000
+                        ) {
+                            message.textContent =
+                                'Quantity must be a whole number from 0 to 1000.';
+                            return;
+                        }
+
+                        save.disabled = true;
+                        message.textContent = '';
+
+                        try {
+                            await window.BookManager.request('library.php', {
+                                action: 'update',
+                                book_id: Number(book.id),
+                                status: status.value,
+                                quantity: amount
+                            });
+
+                            message.textContent = 'Saved.';
+                            await load();
+                        } catch (error) {
+                            message.textContent = error.message;
+                        } finally {
+                            save.disabled = false;
+                        }
+                    });
+
+                    remove.addEventListener('click', async () => {
+                        if (
+                            !window.confirm(
+                                `Remove "${book.title || 'this book'}" from your collection?`
+                            )
+                        ) {
+                            return;
+                        }
+
+                        remove.disabled = true;
+                        message.textContent = '';
+
+                        try {
+                            await window.BookManager.request('library.php', {
+                                action: 'remove',
+                                book_id: Number(book.id)
+                            });
+
+                            await load();
+                        } catch (error) {
+                            message.textContent = error.message;
+                            remove.disabled = false;
+                        }
+                    });
+
+                    actions.append(save, remove);
+
+                    card.append(
+                        statusLabel,
+                        status,
+                        quantityLabel,
+                        quantity,
+                        actions,
+                        message
+                    );
+
+                    cell.append(card);
+                }
+
+                row.append(cell);
+            }
+
+            tbody.append(row);
+        }
+
+        let knownLoginState = null;
+
+        window.addEventListener('bookmanager:authchange', event => {
+            const loggedIn = event.detail.loggedIn;
+
+            if (loggedIn === knownLoginState) return;
+
+            knownLoginState = loggedIn;
+
+            if (!loggedIn) {
+                currentLoad++;
+                showMessage('Log in to view your collection.');
+            } else {
+                load();
+            }
         });
 
-        remove.addEventListener('click', async () => {
-          if (!window.confirm(`Remove "${book.title}" from your collection?`)) return;
-          remove.disabled = true;
-          message.textContent = '';
-          try {
-            await window.BookManager.request('library.php', {
-              action: 'remove',
-              book_id: Number(book.id)
-            });
-            await load();
-          } catch (error) {
-            message.textContent = error.message;
-            remove.disabled = false;
-          }
-        });
-
-        actions.append(save, remove);
-        body.append(statusLabel, status, quantityLabel, quantity, actions, message);
-        card.append(body);
-        column.append(card);
-        grid.append(column);
-      }
-      results.append(grid);
+        load();
     }
 
-    let knownLoginState = null;
-    window.addEventListener('bookmanager:authchange', event => {
-      const loggedIn = event.detail.loggedIn;
-      if (loggedIn === knownLoginState) return;
-      knownLoginState = loggedIn;
-      if (!loggedIn) {
-        currentLoad++;
-        results.textContent = 'Log in to view your collection.';
-      } else {
-        load();
-      }
-    });
-    load();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init, { once: true });
-  } else {
-    init();
-  }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init, { once: true });
+    } else {
+        init();
+    }
 })();
