@@ -89,3 +89,21 @@ body {
     color: #ffffff;
     background-color: #766d66;
 }
+
+/* My Collection Page - Table */
+.collection-table {
+    color: #453931;
+    border: 4px solid #453931;
+    width: calc(100% - 140px);
+    table-layout: fixed;
+    margin-left: 70px;
+    margin-right: 70px;
+    box-sizing: border-box;
+}
+
+.collection-table-headings {
+    color: #a2988e;
+    background-color: #453931 !important;
+    border: 4px solid #b7ab9f;
+    font-size: 24px;
+}
