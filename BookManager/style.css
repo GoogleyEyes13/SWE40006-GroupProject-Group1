@@ -17,6 +17,12 @@ body {
     background: #453931;
 }
 
+.title-icon {
+    height: 90px;
+    width: auto;
+    object-fit: contain;
+}
+
 .navbar {
     margin-top: 0;
     padding-top: 0;
@@ -26,6 +32,7 @@ body {
 .navbar .nav-link {
     color: #b7ab9f !important;
     background-color: #453931;
+    border: 2px solid #b7ab9f;
     font-size: 25px;
     font-weight: bold;
     padding: 5px 0;
