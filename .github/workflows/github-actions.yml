@@ -17,7 +17,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+        
+      - name: Check OIDC Identity
+        run: |
+          curl -fsS \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" \
+            | python3 -c 'import sys,json,base64; t=json.load(sys.stdin)["value"]; p=t.split(".")[1]; d=json.loads(base64.urlsafe_b64decode(p+"===")); print("Subject:",d["sub"]); print("Audience:",d["aud"])'
+            
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
