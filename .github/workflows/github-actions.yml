@@ -1,8 +1,8 @@
-name: AWS Connection Test
+name: Book Library CI/CD Pipeline
 
 on:
   push:
-    branches: [ci-setup-egor]
+    branches: [dev]
   workflow_dispatch:
 
 permissions:
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   aws-test:
-    name: Test AWS Connection
+    name: Book Library CI/CD Pipeline
     runs-on: ubuntu-latest
 
     steps:
