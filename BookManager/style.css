@@ -9,6 +9,8 @@ body {
     text-align: center;
     font-weight: bold;
     margin: 0;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .title-bg {

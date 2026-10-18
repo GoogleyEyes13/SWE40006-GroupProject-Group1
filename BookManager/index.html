@@ -9,17 +9,15 @@
     <!-- CSS -->
     <link href="Framework/css/bootstrap.min.css" rel="stylesheet" />
     <link href="style.css" rel="stylesheet"/>
-
-    <!-- JavaScript -->
-    <script src="Framework/js/bootstrap.bundle.min.js"></script>
 </head>
+
 
 <body>
     <!-- Title -->
     <div class="container-fluid">
         <div class="row text-center">
             <div class="col-12 title-bg">
-                <br><h1 class="title">Book Manager</h1><br>
+                <br><a href="index.html" class="title"><h1 class="title">Book Manager</h1></a><br>
             </div>
         </div>
     </div>
@@ -29,31 +27,18 @@
         <div class="container-fluid p-0">
             <ul class="nav nav-justified w-100 text-center">
                 <li class="nav-item">
-                    <button class="nav-link text-white active w-100" data-bs-toggle="tab" data-bs-target="#library">
+                    <a class="nav-link text-white w-100" href="library.html">
                         Library
-                    </button>
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link text-white w-100" data-bs-toggle="tab" data-bs-target="#mycollection">
+                    <a class="nav-link text-white w-100" href="mycollection.html">
                         My Collection
-                    </button>
+                    </a>
                 </li>
             </ul>
         </div>
     </nav>
-
-    <!-- Tab Content -->
-    <div class="tab-content">
-        <!-- Library Tab-->
-        <div class="tab-pane fade show active container-fluid" id="library">
-            <p>Library Content</p>
-        </div>
-        
-        <!-- My Collection Tab -->
-        <div class="tab-pane fade container-fluid" id="mycollection">
-            <p>My Collection Content</p>
-        </div>
-    </div>
 </body>
 
 </html>
