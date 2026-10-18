@@ -1,4 +1,4 @@
--- User accounts
+
 CREATE TABLE users (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -6,7 +6,7 @@ CREATE TABLE users (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- Books selected from Open Library
+
 CREATE TABLE books (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     openlibrary_key VARCHAR(100) UNIQUE NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE books (
     cover_id INTEGER
 );
 
--- Individual user collections
+
 CREATE TABLE user_books (
     user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
     book_id BIGINT REFERENCES books(id) ON DELETE CASCADE,

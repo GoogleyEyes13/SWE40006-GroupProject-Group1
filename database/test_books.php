@@ -11,13 +11,13 @@ $sampleBook = [
     'cover_i' => 258027
 ];
 
-// Save the book
+
 $id = saveBook($db, $sampleBook);
 
 echo "Book saved successfully!\n";
 echo "Book ID: $id\n";
 
-// Retrieve the book
+
 $book = getBook($db, $sampleBook['key']);
 
 echo "\nRetrieved from PostgreSQL:\n";

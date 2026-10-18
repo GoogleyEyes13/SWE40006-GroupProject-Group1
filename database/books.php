@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/connection.php';
 
-// Save book information to PostgreSQL
+
 function saveBook(PDO $db, array $book): int
 {
     $key = $book['key'] ?? '';
@@ -56,7 +56,6 @@ function saveBook(PDO $db, array $book): int
     return (int)$stmt->fetchColumn();
 }
 
-// Retrieve a saved book
 function getBook(PDO $db, string $key): ?array
 {
     $stmt = $db->prepare(
