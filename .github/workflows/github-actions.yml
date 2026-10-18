@@ -17,6 +17,20 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, dom, xml
+          coverage: none
+          tools: composer:v2
+
+      - name: Install PHP dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Run PHPUnit tests
+        run: vendor/bin/phpunit tests/AuthTest.php
         
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6.3.0
@@ -79,7 +93,10 @@ jobs:
                 ("docker run -d --name book-library-test --restart unless-stopped -p 80:80 --env-file /opt/book-library/.env " + $image),
                 "for i in $(seq 1 15); do curl -fsS http://localhost/ >/dev/null && break; sleep 2; done",
                 "curl -fsS http://localhost/ >/dev/null",
-                "curl -fsS http://localhost/backend/health.php"
+                "curl -fsS http://localhost/backend/health.php",
+                "docker cp book-library-test:/opt/book-library/tests/api_smoke.py /tmp/api_smoke.py",
+                "python3 /tmp/api_smoke.py",
+                "rm -f /tmp/api_smoke.py"
               ]
             }')
 

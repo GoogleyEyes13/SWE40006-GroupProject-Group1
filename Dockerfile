@@ -9,5 +9,6 @@ WORKDIR /var/www/html
 
 COPY BookManager/ /var/www/html/
 COPY database/ /opt/book-library/database/
+COPY tests/ /opt/book-library/tests/
 
 EXPOSE 80
