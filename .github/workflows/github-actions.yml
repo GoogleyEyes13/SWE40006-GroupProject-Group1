@@ -17,6 +17,20 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, dom, xml
+          coverage: none
+          tools: composer:v2
+
+      - name: Install PHP dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Run PHPUnit tests
+        run: vendor/bin/phpunit tests/AuthTest.php
         
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6.3.0
