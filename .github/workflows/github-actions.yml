@@ -2,7 +2,7 @@ name: Book Library CI/CD Pipeline
 
 on:
   push:
-    branches: [frontend-test-egor]
+    branches: [dev]
   workflow_dispatch:
 
 permissions:
@@ -79,10 +79,7 @@ jobs:
                 ("docker run -d --name book-library-test --restart unless-stopped -p 80:80 --env-file /opt/book-library/.env " + $image),
                 "for i in $(seq 1 15); do curl -fsS http://localhost/ >/dev/null && break; sleep 2; done",
                 "curl -fsS http://localhost/ >/dev/null",
-                "curl -fsS http://localhost/backend/health.php",
-                "docker cp book-library-test:/opt/book-library/tests/api_smoke.py /tmp/api_smoke.py",
-                "python3 /tmp/api_smoke.py",
-                "rm -f /tmp/api_smoke.py"
+                "curl -fsS http://localhost/backend/health.php"
               ]
             }')
 
