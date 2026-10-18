@@ -1,0 +1,92 @@
+name: Promote to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: "SHA of the tested Docker image"
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: book-library-production
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Deploy Tested Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::174302433391:role/book-library-github-actions-role
+          aws-region: ap-southeast-4
+
+      - name: Verify image passed Testing
+        env:
+          SHA: ${{ inputs.commit_sha }}
+        run: |
+          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
+
+          DIGEST=$(aws ecr describe-images \
+            --repository-name book-library \
+            --image-ids "imageTag=tested-$SHA" \
+            --query 'imageDetails[0].imageDigest' \
+            --output text)
+
+          if [[ -z "$DIGEST" || "$DIGEST" == "None" ]]; then
+            echo "Image has not passed Testing!"
+            exit 1
+          fi
+
+          echo "IMAGE=174302433391.dkr.ecr.ap-southeast-4.amazonaws.com/book-library@$DIGEST" >> "$GITHUB_ENV"
+
+      - name: Deploy to Production EC2
+        env:
+          INSTANCE_ID: i-04d2c90c7a0e73710
+        run: |
+          REGISTRY="174302433391.dkr.ecr.ap-southeast-4.amazonaws.com"
+
+          COMMANDS=$(jq -nc \
+            --arg registry "$REGISTRY" \
+            --arg image "$IMAGE" \
+            '{
+              commands: [
+                "set -e",
+                ("aws ecr get-login-password --region ap-southeast-4 | docker login --username AWS --password-stdin " + $registry),
+                ("docker pull " + $image),
+                "docker rm -f prod-web book-library-prod >/dev/null 2>&1 || true",
+                ("docker run -d --name book-library-prod --restart unless-stopped -p 80:80 --env-file /opt/book-library/.env " + $image),
+                "for i in $(seq 1 15); do curl -fsS http://localhost/ >/dev/null 2>&1 && break; sleep 2; done",
+                "curl -fsS http://localhost/ >/dev/null",
+                "curl -fsS http://localhost/backend/health.php >/dev/null"
+              ]
+            }')
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters "$COMMANDS" \
+            --query "Command.CommandId" \
+            --output text)
+
+          if ! aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID"; then
+
+            aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query '[Status,StandardOutputContent,StandardErrorContent]' \
+              --output text
+
+            exit 1
+          fi
+
+          echo "Production deployment successful!"
