@@ -2,7 +2,7 @@ name: Book Library CI/CD Pipeline
 
 on:
   push:
-    branches: [database-integration-egor]
+    branches: [dev]
   workflow_dispatch:
 
 permissions:
