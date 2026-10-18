@@ -67,27 +67,56 @@ jobs:
 
           echo "Successfully uploaded $IMAGE"
 
-      - name: Test EC2 connection via SSM
+      - name: Deploy BookManager to Test EC2
         env:
           INSTANCE_ID: i-075ec2dbc29efe79e
         run: |
-          echo "Sending command to Testing EC2..."
+          REGION="ap-southeast-4"
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          REGISTRY="$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com"
+          IMAGE="$REGISTRY/book-library:$GITHUB_SHA"
+
+          echo "Deploying $IMAGE"
+
+          COMMANDS=$(jq -nc \
+            --arg registry "$REGISTRY" \
+            --arg image "$IMAGE" \
+            '{
+              commands: [
+                "set -e",
+                ("aws ecr get-login-password --region ap-southeast-4 | docker login --username AWS --password-stdin " + $registry),
+                ("docker pull " + $image),
+                "docker rm -f test-web || true",
+                "docker rm -f book-library-test || true",
+                ("docker run -d --name book-library-test --restart unless-stopped -p 80:80 --env-file /opt/book-library/.env " + $image),
+                "curl -fsS http://localhost/ >/dev/null",
+                "curl -fsS http://localhost/backend/health.php"
+              ]
+            }')
 
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters '{"commands":["echo Hello from GitHub Actions","hostname","whoami"]}' \
+            --parameters "$COMMANDS" \
             --query "Command.CommandId" \
             --output text)
 
-          echo "Command ID: $COMMAND_ID"
+          echo "Deployment command: $COMMAND_ID"
 
           aws ssm wait command-executed \
             --command-id "$COMMAND_ID" \
-            --instance-id "$INSTANCE_ID"
+            --instance-id "$INSTANCE_ID" || true
 
           aws ssm get-command-invocation \
             --command-id "$COMMAND_ID" \
             --instance-id "$INSTANCE_ID" \
             --query '[Status,StandardOutputContent,StandardErrorContent]' \
             --output text
+
+          STATUS=$(aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query Status \
+            --output text)
+
+          test "$STATUS" = "Success"
