@@ -122,6 +122,23 @@ jobs:
 
           test "$STATUS" = "Success"
 
+      - name: Mark image as tested
+        run: |
+          echo "Marking $GITHUB_SHA as tested..."
+
+          aws ecr batch-get-image \
+            --repository-name book-library \
+            --image-ids imageTag="$GITHUB_SHA" \
+            --query 'images[0].imageManifest' \
+            --output text > manifest.json
+
+          aws ecr put-image \
+            --repository-name book-library \
+            --image-tag "tested-$GITHUB_SHA" \
+            --image-manifest file://manifest.json
+
+          echo "Image successfully verified and tagged!"
+
       - name: Verify Production EC2 connection
         env:
           INSTANCE_ID: i-04d2c90c7a0e73710
