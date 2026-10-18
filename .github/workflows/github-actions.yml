@@ -1,23 +1,30 @@
-name: CI Pipeline Test
+name: AWS Connection Test
 
 on:
   push:
     branches: [ci-setup-egor]
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
-  test:
-    name: Test GitHub Runner
+  aws-test:
+    name: Test AWS Connection
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Verify environment
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::174302433391:role/book-library-github-actions-role
+          aws-region: ap-southeast-4
+
+      - name: Verify AWS connection
         run: |
-          echo "GitHub Actions is working!"
-          echo "Branch: $GITHUB_REF_NAME"
-          docker --version
-          aws --version
-          ls -la
+          aws sts get-caller-identity
+          echo "Successfully connected to AWS!"
