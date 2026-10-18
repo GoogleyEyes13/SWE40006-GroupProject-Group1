@@ -8,5 +8,6 @@ RUN apt-get update \
 WORKDIR /var/www/html
 
 COPY BookManager/ /var/www/html/
+COPY database/ /opt/book-library/database/
 
 EXPOSE 80
