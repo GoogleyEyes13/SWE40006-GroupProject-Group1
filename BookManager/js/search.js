@@ -57,28 +57,27 @@
         if (typeof book.key !== 'string' || typeof book.title !== 'string') continue;
 
         const column = element('div', 'col-12 col-md-6 col-lg-4');
-        const card = element('article', 'card h-100');
+        const card = element('article', 'card book-card h-100');
         const body = element('div', 'card-body');
         body.append(element('h3', 'h5 card-title', book.title));
         body.append(element('p', 'card-text', Array.isArray(book.author_name) ? book.author_name.join(', ') : 'Author unknown'));
         if (Number.isInteger(book.first_publish_year)) {
-          body.append(element('p', 'small text-muted', `First published: ${book.first_publish_year}`));
+          body.append(element('p', 'book-year', `First published: ${book.first_publish_year}`));
         }
 
         if (Number.isSafeInteger(book.cover_i) && book.cover_i > 0) {
-          const cover = element('img', 'card-img-top');
+          const cover = element('img', 'card-img-top book-cover');
           cover.src = `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`;
           cover.alt = `Cover of ${book.title}`;
           cover.loading = 'lazy';
-          cover.style.cssText = 'max-height:220px;object-fit:contain;padding:12px';
           card.append(cover);
         }
 
-        const actions = element('div', 'd-flex flex-wrap gap-2');
-        const wishlist = element('button', 'btn btn-outline-primary btn-sm', 'Add to wishlist');
+        const actions = element('div', 'book-actions d-flex flex-wrap gap-2');
+        const wishlist = element('button', 'btn book-button btn-sm', 'Add to wishlist');
         wishlist.type = 'button';
         wishlist.addEventListener('click', () => addBook(book, 'want_to_read', wishlist));
-        const owned = element('button', 'btn btn-primary btn-sm', 'Add as owned');
+        const owned = element('button', 'btn book-button btn-sm', 'Add as owned');
         owned.type = 'button';
         owned.addEventListener('click', () => addBook(book, 'owned', owned));
         actions.append(wishlist, owned);

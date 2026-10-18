@@ -214,3 +214,75 @@ body {
     cursor: not-allowed;
 }
 
+
+/* Library Page - Grid Display */
+#search-results {
+    padding: 20px 60px 40px;
+}
+
+.book-card {
+    color: #453931;
+    background-color: #d8cec3;
+    border: 3px solid #453931;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgb(69 57 49 / 15%);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.book-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 14px rgb(69 57 49 / 25%);
+}
+
+.book-cover {
+    height: 240px;
+    width: 100%;
+    object-fit: contain;
+    padding: 15px;
+    background-color: #c8bbae;
+    border-bottom: 2px solid #453931;
+}
+
+.book-card .card-title {
+    color: #453931;
+    font-weight: bold;
+}
+
+.book-card .card-text {
+    color: #766d66;
+    font-size: 16px;
+}
+
+.book-year {
+    color: #766d66;
+    font-size: 14px;
+}
+
+.book-actions {
+    padding-top: 15px;
+}
+
+.book-button {
+    color: #b7ab9f;
+    background-color: #453931;
+    border: 2px solid #453931;
+    font-weight: bold;
+}
+
+.book-button:hover {
+    color: #ffffff;
+    background-color: #766d66;
+    border-color: #766d66;
+}
+
+.book-button:disabled {
+    opacity: 0.65;
+}
+
+.library-message {
+    color: #453931;
+    font-size: 20px;
+    text-align: center;
+    padding: 20px;
+}
