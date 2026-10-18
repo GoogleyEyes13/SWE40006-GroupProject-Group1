@@ -89,6 +89,7 @@ jobs:
                 "docker rm -f test-web || true",
                 "docker rm -f book-library-test || true",
                 ("docker run -d --name book-library-test --restart unless-stopped -p 80:80 --env-file /opt/book-library/.env " + $image),
+                "for i in $(seq 1 15); do curl -fsS http://localhost/ >/dev/null && break; sleep 2; done",
                 "curl -fsS http://localhost/ >/dev/null",
                 "curl -fsS http://localhost/backend/health.php"
               ]
