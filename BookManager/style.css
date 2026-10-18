@@ -1,4 +1,36 @@
-h1 {
+body {
+    background: #b7ab9f;
+}
+
+.title {
+    font-family: 'Lucida Handwriting', cursive;
+    color: #a2988e;
+    font-size: 70px;
     text-align: center;
-    font-size: 50px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.title-bg {
+    background: #453931;
+}
+
+.navbar {
+    margin-top: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.navbar .nav-link {
+    color: #b7ab9f !important;
+    background-color: #453931;
+    font-size: 25px;
+    font-weight: bold;
+    padding: 5px 0;
+    z-index: 0;
+}
+
+.navbar .nav-link:hover {
+    color: #453931 !important;
+    background-color: #766d66;
 }
