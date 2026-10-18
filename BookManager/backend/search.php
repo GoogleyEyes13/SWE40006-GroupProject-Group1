@@ -1,4 +1,6 @@
 <?php
+namespace Search;
+
 header('Content-Type: application/json; charset=utf-8');
 
 $query = trim($_GET['q'] ?? '');
