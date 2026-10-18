@@ -59,9 +59,9 @@
   async function init() {
     const navbar = document.querySelector('nav');
     const panel = document.createElement('section');
-    panel.className = 'container-fluid py-3';
+    panel.className = 'container-fluid py-3 text-center';
     panel.innerHTML = `
-      <div class="d-flex flex-wrap align-items-center gap-2">
+      <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
         <span id="bm-auth-status" class="me-2" aria-live="polite">Checking session...</span>
         <button type="button" id="bm-login-button" class="btn btn-outline-primary btn-sm">Log in</button>
         <button type="button" id="bm-register-button" class="btn btn-outline-primary btn-sm">Register</button>
@@ -80,10 +80,14 @@
       </form>
       <p id="bm-auth-message" class="small mt-2 mb-0" role="status"></p>
     `;
-    if (navbar) {
-      navbar.after(panel);
+    const loginSection = document.querySelector('#login-section');
+
+    if (loginSection) {
+        loginSection.after(panel);
+    } else if (navbar) {
+        navbar.after(panel);
     } else {
-      document.body.prepend(panel);
+        document.body.prepend(panel);
     }
 
     const status = panel.querySelector('#bm-auth-status');
