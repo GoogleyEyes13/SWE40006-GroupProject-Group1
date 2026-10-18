@@ -45,6 +45,20 @@ body {
     background-color: #766d66;
 }
 
+
+/* Home Page - Information */
+.information-title {
+    color: #453931;
+    font-size: 35px;
+    font-weight: bold;
+}
+
+.information-text {
+    color: #453931;
+    font-size: 24px;
+}
+
+
 /* Library Page - Search Bar */
 .search-container {
     padding: 40px 60px;
