@@ -40,21 +40,32 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push test Docker image
+      - name: Build and push BookManager
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: book-library
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          IMAGE="$ECR_REGISTRY/$ECR_REPOSITORY:ci-smoke-test"
+          IMAGE="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
-          docker build -t "$IMAGE" - <<'EOF'
-          FROM nginx:alpine
-          RUN echo "Book Library CI test successful!" > /usr/share/nginx/html/index.html
-          EOF
+          # Build the actual PHP application
+          docker build -t "$IMAGE" .
 
+          # Run the application temporarily
+          docker run -d --name bookmanager-test -p 8080:80 "$IMAGE"
+
+          # Verify frontend and PHP backend
+          sleep 3
+          curl -f http://localhost:8080/
+          curl -f http://localhost:8080/backend/health.php
+
+          # Clean up test container
+          docker rm -f bookmanager-test
+
+          # Upload verified image to AWS ECR
           docker push "$IMAGE"
 
-          echo "Successfully pushed $IMAGE"
+          echo "Successfully uploaded $IMAGE"
 
       - name: Test EC2 connection via SSM
         env:
