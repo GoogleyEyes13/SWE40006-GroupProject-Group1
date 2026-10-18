@@ -86,6 +86,11 @@
         quantity.max = '1000';
         quantity.step = '1';
         quantity.value = String(book.quantity ?? 0);
+        status.addEventListener('change', () => {
+          if (status.value !== 'want_to_read' && Number(quantity.value) === 0) {
+            quantity.value = '1';
+          }
+        });
 
         const actions = element('div', 'd-flex gap-2');
         const save = element('button', 'btn btn-primary btn-sm', 'Save changes');

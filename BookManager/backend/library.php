@@ -92,6 +92,12 @@ try {
         libraryResponse(400, ['error' => 'Invalid status or quantity']);
     }
 
+    if ($status !== 'want_to_read' && $quantity === 0) {
+        libraryResponse(400, [
+            'error' => 'Quantity must be at least 1 for this status'
+        ]);
+    }
+
     if ($action === 'update') {
         $bookId = $data['book_id'] ?? null;
 
