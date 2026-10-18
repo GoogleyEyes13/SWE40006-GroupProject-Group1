@@ -4,7 +4,7 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ ."/../database/library.php";
 
-class Test_Library extends TestCase
+class LibraryTest extends TestCase
 {
     public function TestGetUserLibrary(): void {
         //Test that user can access their library

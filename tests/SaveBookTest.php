@@ -4,7 +4,7 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ ."/../database/books.php";
 
-class Test_Book extends TestCase
+class SaveBookTest extends TestCase
 {
     public function TestSaveBook(): void {
         $author = "";
