@@ -2,7 +2,7 @@ name: Book Library CI/CD Pipeline
 
 on:
   push:
-    branches: [dev]
+    branches: [frontend-test-egor]
   workflow_dispatch:
 
 permissions:
