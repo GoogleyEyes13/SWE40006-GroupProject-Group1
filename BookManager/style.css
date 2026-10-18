@@ -1,4 +1,91 @@
-h1 {
+/* All Pages - Background and Header */
+body {
+    background: #b7ab9f;
+}
+
+.title {
+    font-family: 'Lucida Handwriting', cursive;
+    color: #a2988e;
+    font-size: 70px;
     text-align: center;
-    font-size: 50px;
+    font-weight: bold;
+    margin: 0;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.title-bg {
+    background: #453931;
+}
+
+.title-icon {
+    height: 90px;
+    width: auto;
+    object-fit: contain;
+}
+
+.navbar {
+    margin-top: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.navbar .nav-link {
+    color: #b7ab9f !important;
+    background-color: #453931;
+    border: 2px solid #b7ab9f;
+    font-size: 25px;
+    font-weight: bold;
+    padding: 5px 0;
+    z-index: 0;
+}
+
+.navbar .nav-link:hover {
+    color: #453931 !important;
+    background-color: #766d66;
+}
+
+
+/* Home Page - Information */
+.information-title {
+    color: #453931;
+    font-size: 35px;
+    font-weight: bold;
+}
+
+.information-text {
+    color: #453931;
+    font-size: 24px;
+}
+
+
+/* Library Page - Search Bar */
+.search-container {
+    padding: 40px 60px;
+}
+
+.search-container .form-control {
+    background-color: #d8cec3;
+    border: 2px solid #453931;
+    font-size: 18px;
+}
+
+.search-container .form-control:focus {
+    border-color: #766d66;
+    box-shadow: 0 0 8px #453931;
+    outline: none;
+}
+
+.search-button {
+    color: #b7ab9f;
+    background-color: #453931;
+    border: 2px solid #453931;
+    font-size: 18px;
+    font-weight: bold;
+    width: 20%;
+}
+
+.search-button:hover {
+    color: #ffffff;
+    background-color: #766d66;
 }
