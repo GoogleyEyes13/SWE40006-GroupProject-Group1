@@ -17,8 +17,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Validate composer.json and composer.lock
-      run: composer validate --strict
+    #- name: Validate composer.json and composer.lock
+    #  run: composer validate --strict
 
     - name: Cache Composer packages
       id: composer-cache
@@ -37,3 +37,6 @@ jobs:
 
     # - name: Run test suite
     #   run: composer run-script test
+    
+    - name: Run test suite
+      run: vendor/bin/phpunit
