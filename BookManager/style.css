@@ -1,3 +1,4 @@
+/* All Pages - Background and Header */
 body {
     background: #b7ab9f;
 }
@@ -41,5 +42,36 @@ body {
 
 .navbar .nav-link:hover {
     color: #453931 !important;
+    background-color: #766d66;
+}
+
+/* Library Page - Search Bar */
+.search-container {
+    padding: 40px 60px;
+}
+
+.search-container .form-control {
+    background-color: #d8cec3;
+    border: 2px solid #453931;
+    font-size: 18px;
+}
+
+.search-container .form-control:focus {
+    border-color: #766d66;
+    box-shadow: 0 0 8px #453931;
+    outline: none;
+}
+
+.search-button {
+    color: #b7ab9f;
+    background-color: #453931;
+    border: 2px solid #453931;
+    font-size: 18px;
+    font-weight: bold;
+    width: 20%;
+}
+
+.search-button:hover {
+    color: #ffffff;
     background-color: #766d66;
 }
