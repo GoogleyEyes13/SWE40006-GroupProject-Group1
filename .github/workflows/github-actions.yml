@@ -1,8 +1,8 @@
-name: AWS Connection Test
+name: Book Library CI/CD Pipeline
 
 on:
   push:
-    branches: [ci-setup-egor]
+    branches: [database-integration-egor]
   workflow_dispatch:
 
 permissions:
@@ -10,31 +10,19 @@ permissions:
   contents: read
 
 jobs:
-  aws-test:
-    name: Test AWS Connection
+  deploy:
+    name: Build, Test and Deploy
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         
-      - name: Check OIDC Identity
-        run: |
-          curl -fsS \
-            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" \
-            | python3 -c 'import sys,json,base64; t=json.load(sys.stdin)["value"]; p=t.split(".")[1]; d=json.loads(base64.urlsafe_b64decode(p+"===")); print("Subject:",d["sub"]); print("Audience:",d["aud"])'
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
           role-to-assume: arn:aws:iam::174302433391:role/book-library-github-actions-role
           aws-region: ap-southeast-4
-
-      - name: Verify AWS connection
-        run: |
-          aws sts get-caller-identity
-          echo "Successfully connected to AWS!"
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -138,29 +126,6 @@ jobs:
             --image-manifest file://manifest.json
 
           echo "Image successfully verified and tagged!"
-
-      - name: Verify Production EC2 connection
-        env:
-          INSTANCE_ID: i-04d2c90c7a0e73710
-        run: |
-          echo "Connecting to Production EC2..."
-
-          COMMAND_ID=$(aws ssm send-command \
-            --instance-ids "$INSTANCE_ID" \
-            --document-name "AWS-RunShellScript" \
-            --parameters '{"commands":["echo Production EC2 connected successfully!","hostname","whoami"]}' \
-            --query "Command.CommandId" \
-            --output text)
-
-          aws ssm wait command-executed \
-            --command-id "$COMMAND_ID" \
-            --instance-id "$INSTANCE_ID"
-
-          aws ssm get-command-invocation \
-            --command-id "$COMMAND_ID" \
-            --instance-id "$INSTANCE_ID" \
-            --query '[Status,StandardOutputContent]' \
-            --output text
 
       - name: Deploy to Production
         if: ${{ vars.AUTO_PROMOTE == 'true' }}
