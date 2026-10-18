@@ -95,3 +95,32 @@ function removeUserBook(PDO $db, int $userId, int $bookId): bool
 
     return $stmt->rowCount() > 0;
 }
+
+function updateUserBook(
+    PDO $db,
+    int $userId,
+    int $bookId,
+    string $status,
+    int $quantity
+): bool {
+    $allowed = ['want_to_read', 'owned', 'reading', 'read'];
+
+    if (!in_array($status, $allowed, true) || $quantity < 0 || $quantity > 1000) {
+        throw new InvalidArgumentException('Invalid book details');
+    }
+
+    $stmt = $db->prepare("
+        UPDATE user_books
+        SET status = :status, quantity = :quantity
+        WHERE user_id = :user_id AND book_id = :book_id
+    ");
+
+    $stmt->execute([
+        'status' => $status,
+        'quantity' => $quantity,
+        'user_id' => $userId,
+        'book_id' => $bookId
+    ]);
+
+    return $stmt->rowCount() > 0;
+}

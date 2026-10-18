@@ -3,13 +3,7 @@ declare(strict_types=1);
 
 require_once '/opt/book-library/database/users.php';
 
-ini_set('session.use_strict_mode', '1');
-
-session_start([
-    'cookie_httponly' => true,
-    'cookie_samesite' => 'Lax',
-    'cookie_secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
-]);
+require_once '/opt/book-library/database/session.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -26,7 +20,8 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method === 'GET') {
     respond(200, [
         'logged_in' => isset($_SESSION['user_id']),
-        'user_id' => $_SESSION['user_id'] ?? null
+        'user_id' => $_SESSION['user_id'] ?? null,
+        'csrf_token' => $_SESSION['csrf_token']
     ]);
 }
 
@@ -50,6 +45,12 @@ $data = json_decode($raw, true);
 
 if (!is_array($data)) {
     respond(400, ['error' => 'Invalid JSON']);
+}
+
+$token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+
+if (!is_string($token) || !hash_equals($_SESSION['csrf_token'], $token)) {
+    respond(403, ['error' => 'Invalid security token']);
 }
 
 $action = $data['action'] ?? '';
