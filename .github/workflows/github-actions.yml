@@ -1,0 +1,211 @@
+name: AWS Connection Test
+
+on:
+  push:
+    branches: [ci-setup-egor]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  aws-test:
+    name: Test AWS Connection
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Check OIDC Identity
+        run: |
+          curl -fsS \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" \
+            | python3 -c 'import sys,json,base64; t=json.load(sys.stdin)["value"]; p=t.split(".")[1]; d=json.loads(base64.urlsafe_b64decode(p+"===")); print("Subject:",d["sub"]); print("Audience:",d["aud"])'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::174302433391:role/book-library-github-actions-role
+          aws-region: ap-southeast-4
+
+      - name: Verify AWS connection
+        run: |
+          aws sts get-caller-identity
+          echo "Successfully connected to AWS!"
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push BookManager
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: book-library
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          IMAGE="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+          # Build the actual PHP application
+          docker build -t "$IMAGE" .
+
+          # Run the application temporarily
+          docker run -d --name bookmanager-test -p 8080:80 "$IMAGE"
+
+          # Verify frontend and PHP backend
+          sleep 3
+          curl -f http://localhost:8080/
+          curl -f http://localhost:8080/backend/health.php
+
+          # Clean up test container
+          docker rm -f bookmanager-test
+
+          # Upload verified image to AWS ECR
+          docker push "$IMAGE"
+
+          echo "Successfully uploaded $IMAGE"
+
+      - name: Deploy BookManager to Test EC2
+        env:
+          INSTANCE_ID: i-075ec2dbc29efe79e
+        run: |
+          REGION="ap-southeast-4"
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          REGISTRY="$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com"
+          IMAGE="$REGISTRY/book-library:$GITHUB_SHA"
+
+          echo "Deploying $IMAGE"
+
+          COMMANDS=$(jq -nc \
+            --arg registry "$REGISTRY" \
+            --arg image "$IMAGE" \
+            '{
+              commands: [
+                "set -e",
+                ("aws ecr get-login-password --region ap-southeast-4 | docker login --username AWS --password-stdin " + $registry),
+                ("docker pull " + $image),
+                "docker rm -f test-web || true",
+                "docker rm -f book-library-test || true",
+                ("docker run -d --name book-library-test --restart unless-stopped -p 80:80 --env-file /opt/book-library/.env " + $image),
+                "for i in $(seq 1 15); do curl -fsS http://localhost/ >/dev/null && break; sleep 2; done",
+                "curl -fsS http://localhost/ >/dev/null",
+                "curl -fsS http://localhost/backend/health.php"
+              ]
+            }')
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters "$COMMANDS" \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "Deployment command: $COMMAND_ID"
+
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" || true
+
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query '[Status,StandardOutputContent,StandardErrorContent]' \
+            --output text
+
+          STATUS=$(aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query Status \
+            --output text)
+
+          test "$STATUS" = "Success"
+
+      - name: Mark image as tested
+        run: |
+          echo "Marking $GITHUB_SHA as tested..."
+
+          aws ecr batch-get-image \
+            --repository-name book-library \
+            --image-ids imageTag="$GITHUB_SHA" \
+            --query 'images[0].imageManifest' \
+            --output text > manifest.json
+
+          aws ecr put-image \
+            --repository-name book-library \
+            --image-tag "tested-$GITHUB_SHA" \
+            --image-manifest file://manifest.json
+
+          echo "Image successfully verified and tagged!"
+
+      - name: Verify Production EC2 connection
+        env:
+          INSTANCE_ID: i-04d2c90c7a0e73710
+        run: |
+          echo "Connecting to Production EC2..."
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters '{"commands":["echo Production EC2 connected successfully!","hostname","whoami"]}' \
+            --query "Command.CommandId" \
+            --output text)
+
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID"
+
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query '[Status,StandardOutputContent]' \
+            --output text
+
+      - name: Deploy to Production
+        if: ${{ vars.AUTO_PROMOTE == 'true' }}
+        env:
+          INSTANCE_ID: i-04d2c90c7a0e73710
+        run: |
+          REGION="ap-southeast-4"
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          REGISTRY="$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com"
+          IMAGE="$REGISTRY/book-library:$GITHUB_SHA"
+
+          echo "Promoting tested image to Production: $IMAGE"
+
+          COMMANDS=$(jq -nc \
+            --arg registry "$REGISTRY" \
+            --arg image "$IMAGE" \
+            '{
+              commands: [
+                "set -e",
+                ("aws ecr get-login-password --region ap-southeast-4 | docker login --username AWS --password-stdin " + $registry),
+                ("docker pull " + $image),
+                "docker rm -f prod-web book-library-prod >/dev/null 2>&1 || true",
+                ("docker run -d --name book-library-prod --restart unless-stopped -p 80:80 --env-file /opt/book-library/.env " + $image),
+                "for i in $(seq 1 15); do curl -fsS http://localhost/ >/dev/null 2>&1 && break; sleep 2; done",
+                "curl -fsS http://localhost/ >/dev/null",
+                "curl -fsS http://localhost/backend/health.php >/dev/null"
+              ]
+            }')
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters "$COMMANDS" \
+            --query "Command.CommandId" \
+            --output text)
+
+          if ! aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID"; then
+            aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query '[Status,StandardOutputContent,StandardErrorContent]' \
+              --output text
+            exit 1
+          fi
+
+          echo "Production deployment successful!"
