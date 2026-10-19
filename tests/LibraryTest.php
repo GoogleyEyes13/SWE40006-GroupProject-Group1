@@ -55,6 +55,6 @@ class LibraryTest extends TestCase
         $result = removeUserBook($mockdb, $userID, $bookID);
 
         //Test that a book can be removed from a users library
-        $this->assertEqual(0, $result);
+        $this->assertSame(0, $result);
     }
 }
