@@ -147,23 +147,22 @@ jobs:
           REGION="ap-southeast-4"
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           REGISTRY="$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com"
-          IMAGE="$REGISTRY/book-library:$GITHUB_SHA"
+          IMAGE="$REGISTRY/book-library:tested-$GITHUB_SHA"
 
-          echo "Promoting tested image to Production: $IMAGE"
+          SCRIPT_BASE64=$(base64 -w 0 scripts/deploy-prod.sh)
+
+          echo "Automatically promoting verified image: $IMAGE"
 
           COMMANDS=$(jq -nc \
             --arg registry "$REGISTRY" \
             --arg image "$IMAGE" \
+            --arg script "$SCRIPT_BASE64" \
             '{
               commands: [
                 "set -e",
                 ("aws ecr get-login-password --region ap-southeast-4 | docker login --username AWS --password-stdin " + $registry),
-                ("docker pull " + $image),
-                "docker rm -f prod-web book-library-prod >/dev/null 2>&1 || true",
-                ("docker run -d --name book-library-prod --restart unless-stopped -p 80:80 --env-file /opt/book-library/.env " + $image),
-                "for i in $(seq 1 15); do curl -fsS http://localhost/ >/dev/null 2>&1 && break; sleep 2; done",
-                "curl -fsS http://localhost/ >/dev/null",
-                "curl -fsS http://localhost/backend/health.php >/dev/null"
+                ("printf %s " + $script + " | base64 -d > /tmp/book-library-deploy-prod.sh"),
+                ("bash /tmp/book-library-deploy-prod.sh " + $image)
               ]
             }')
 
@@ -174,15 +173,24 @@ jobs:
             --query "Command.CommandId" \
             --output text)
 
-          if ! aws ssm wait command-executed \
+          echo "Deployment command: $COMMAND_ID"
+
+          aws ssm wait command-executed \
             --command-id "$COMMAND_ID" \
-            --instance-id "$INSTANCE_ID"; then
-            aws ssm get-command-invocation \
-              --command-id "$COMMAND_ID" \
-              --instance-id "$INSTANCE_ID" \
-              --query '[Status,StandardOutputContent,StandardErrorContent]' \
-              --output text
-            exit 1
-          fi
+            --instance-id "$INSTANCE_ID" || true
+
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query '[Status,StandardOutputContent,StandardErrorContent]' \
+            --output text
+
+          STATUS=$(aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query Status \
+            --output text)
+
+          test "$STATUS" = "Success"
 
           echo "Production deployment successful!"
