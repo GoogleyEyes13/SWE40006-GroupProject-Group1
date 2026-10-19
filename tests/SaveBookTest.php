@@ -25,7 +25,7 @@ class SaveBookTest extends TestCase
         $key = "";
 
         //Create mock database statement (for testing), says that the statement will be true
-        $mockstatement = $this->createMock(Statement::class);
+        $mockstatement = $this->createMock(PDOStatement::class);
         $mockstatement->expects($this->once())
             ->method('execute')
             ->willReturn(true);
