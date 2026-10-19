@@ -5,6 +5,7 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../database/users.php';
 
+//unit test checking user authentication
 final class AuthTest extends TestCase
 {
     public function testValidCredentialsReturnUserId(): void
