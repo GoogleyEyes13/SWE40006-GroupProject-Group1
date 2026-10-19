@@ -25,9 +25,9 @@ class SaveBookTest extends TestCase
         $mockdb = $this->createMock(PDO::class);
         $mockdb->expects($this->once())
             ->method('prepare')
-            ->willReturn($statement)
+            ->willReturn($statement);
 
-        $result = getBook($mockdb, $key)
+        $result = getBook($mockdb, $key);
 
         //test that a book can be found in the database (check that the database exists)
         $this->assertSame($title, $result);
