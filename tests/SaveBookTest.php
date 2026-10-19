@@ -10,7 +10,7 @@ class SaveBookTest extends TestCase
 {
     public function testGetBook(): void {
         //variables retrieved for test
-        $key = 1;
+        $key = "1";
         $title = "Percy Jackson's Greek Gods";
         $author = "Rick Riordan";
         $year = 2006;
