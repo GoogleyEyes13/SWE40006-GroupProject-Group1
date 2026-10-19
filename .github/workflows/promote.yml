@@ -13,12 +13,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: book-library-production
+  group: book-library-release
   cancel-in-progress: false
+  queue: max
 
 jobs:
   promote:
     name: Deploy Tested Image
+    if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
 
     steps:

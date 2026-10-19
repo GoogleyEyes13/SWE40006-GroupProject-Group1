@@ -2,16 +2,23 @@ name: Book Library CI/CD Pipeline
 
 on:
   push:
-    branches: [dev]
+    branches:
+      - dev
   workflow_dispatch:
 
 permissions:
   id-token: write
   contents: read
 
+concurrency:
+  group: book-library-release
+  cancel-in-progress: false
+  queue: max
+
 jobs:
   deploy:
     name: Build, Test and Deploy
+    if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
 
     steps:
@@ -31,7 +38,7 @@ jobs:
 
       - name: Run PHPUnit tests
         run: vendor/bin/phpunit tests/
-        
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
@@ -50,21 +57,16 @@ jobs:
         run: |
           IMAGE="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
-          # Build the actual PHP application
           docker build -t "$IMAGE" .
 
-          # Run the application temporarily
           docker run -d --name bookmanager-test -p 8080:80 "$IMAGE"
 
-          # Verify frontend and PHP backend
           sleep 3
           curl -f http://localhost:8080/
           curl -f http://localhost:8080/backend/health.php
 
-          # Clean up test container
           docker rm -f bookmanager-test
 
-          # Upload verified image to AWS ECR
           docker push "$IMAGE"
 
           echo "Successfully uploaded $IMAGE"
