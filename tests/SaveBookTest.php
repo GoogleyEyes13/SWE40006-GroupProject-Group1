@@ -5,7 +5,7 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ ."/../database/books.php";
 
-//Mock unit test with database
+//Mock unit test with database to check that books can be fetched from a database
 class SaveBookTest extends TestCase
 {
     public function testGetBook(): void {
@@ -44,5 +44,4 @@ class SaveBookTest extends TestCase
         //check that something is returned when the database is searched
         $this->assertNotNull($result, 'database can be searched and retrieved from');
     }
-
 }
