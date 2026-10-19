@@ -16,11 +16,21 @@ class SaveBookTest extends TestCase
         $year = 2006;
         $cover = 5;
 
-        //Create mock database
+        //Create mock database statement calls
         $statement = $this->createMock(PDOStatement::class);
         $statement->expects($this->once())
             ->method('execute')
             ->willReturn(true);
+
+        $statement->expects($this->once())
+            ->method('fetch')
+            ->willReturn([
+                'key' => $key,
+                'title' => $title,
+                'author' => $author,
+                'year' => $year,
+                'cover' => $cover
+            ]);
 
         $mockdb = $this->createMock(PDO::class);
         $mockdb->expects($this->once())
