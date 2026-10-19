@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+http_response_code(503);
+echo 'Intentional rollback test';
+exit;
+
 require_once '/opt/book-library/database/users.php';
 
 require_once '/opt/book-library/database/session.php';
