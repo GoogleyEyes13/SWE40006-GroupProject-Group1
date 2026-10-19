@@ -32,7 +32,7 @@ class SaveBookTest extends TestCase
 
 
         //Create fake database connection -- returns the mock statement above instead of a flase connection
-        $mockdb = $this->createMock(Connection::class);
+        $mockdb = $this->createMock(PDO::class);
         $mockdb->expects($this->once())
         ->method('prepare')
         ->willReturn($mockstatement);
