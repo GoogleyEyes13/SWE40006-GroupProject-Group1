@@ -15,6 +15,11 @@ def accept_dialogs(page: Page):
     page.on("dialog", lambda dialog: dialog.accept())
 
 
+def open_page(page: Page, link: str, path: str):
+    page.get_by_role("link", name=link).click()
+    page.wait_for_url(f"**/{path}")
+
+
 def submit_auth_form(page: Page, button: str):
     page.click(button)
     page.fill("#bm-email", EMAIL)
@@ -34,11 +39,11 @@ def test_home_page_loads(page: Page):
 def test_navigation_between_pages(page: Page):
     page.goto("/")
 
-    page.get_by_role("link", name="Library").click()
+    open_page(page, "Library", "library.html")
     expect(page).to_have_title("Book Manager - Library")
     expect(page.get_by_placeholder("Search Books...")).to_be_visible()
 
-    page.get_by_role("link", name="My Collection").click()
+    open_page(page, "My Collection", "mycollection.html")
     expect(page).to_have_title("Book Manager - My Collection")
     expect(page.locator(".collection-table-headings")).to_have_count(4)
 
@@ -65,7 +70,7 @@ def test_reader_journey(page: Page):
     page.goto("/")
     submit_auth_form(page, "#bm-register-button")
 
-    page.get_by_role("link", name="Library").click()
+    open_page(page, "Library", "library.html")
     page.get_by_placeholder("Search Books...").fill("The Hobbit Tolkien")
     page.get_by_role("button", name="Search").click()
 
@@ -76,7 +81,7 @@ def test_reader_journey(page: Page):
     first_result.get_by_role("button", name="Add to wishlist").click()
     expect(first_result.get_by_role("button", name="Saved")).to_be_disabled()
 
-    page.get_by_role("link", name="My Collection").click()
+    open_page(page, "My Collection", "mycollection.html")
     columns = page.locator(".collection-status-column")
 
     wishlist_book = columns.nth(0).locator(".collection-book")
