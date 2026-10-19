@@ -6,7 +6,7 @@ require_once __DIR__ ."/../database/books.php";
 
 class SaveBookTest extends TestCase
 {
-    public function TestSaveBook(): void {
+    public function testSaveBook(): void {
         $author = "";
         $key = "";
         $title = "";

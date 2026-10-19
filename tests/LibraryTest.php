@@ -6,22 +6,22 @@ require_once __DIR__ ."/../database/library.php";
 
 class LibraryTest extends TestCase
 {
-    public function TestGetUserLibrary(): void {
+    public function testGetUserLibrary(): void {
         //Test that user can access their library
         $this->assertTrue(true);
     }
 
-    public function TestSaveUserBook(): void {
+    public function testSaveUserBook(): void {
         //Test that a book can be saved to the users library
         $this->assertTrue(true);
     }
 
-    public function TestUpdateUserLibrary(): void {
+    public function testUpdateUserLibrary(): void {
         //Test that a book can be updated from a users library
         $this->assertTrue(true);
     }
 
-    public function TestRemoveBookFromLibrary(): void {
+    public function testRemoveBookFromLibrary(): void {
         //Test that a book can be removed from a users library
         $this->assertTrue(true);
     }
