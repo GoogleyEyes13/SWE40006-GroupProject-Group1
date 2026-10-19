@@ -22,15 +22,23 @@ class SaveBookTest extends TestCase
     }
 
     public function testNullCheck(): void {
-        //Create mock database
         $key = "";
-        $book = "Harry Potter";
 
-        //Create fake database connection
-        $db = $this->createMock(PDO::class);
+        //Create mock database statement (for testing), says that the statement will be true
+        $mockstatement = $this->createMock(Statement::class)
+        $mockstatement->expects($this->once())
+            ->method('execute')
+            ->willReturn(true);
+
+
+        //Create fake database connection -- returns the mock statement above instead of a flase connection
+        $mockdb = $this->createMock(Connection::class);
+        $mockdb->expects($this->once())
+        ->method('prepare')
+        ->willReturn($mockstatement);
 
         //Fill parameters for getBook
-        $result = getBook($db, $key);
+        $result = getBook($mockdb, $key);
 
         //Assert that test should result in a failure/null
         $this->assertNull($result);
