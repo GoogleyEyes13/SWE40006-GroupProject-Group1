@@ -39,11 +39,10 @@ class SaveBookTest extends TestCase
             ->method('prepare')
             ->willReturn($statement);
 
-        $result = getBook($mockdb, "0");
+        $result = getBook($mockdb, "1");
 
         //check that something is returned when the database is searched
-        //$this->assertNotNull($result, 'database can be searched and isnt null');
-        $this->assertNull($result, 'key does not exist in database');
+        $this->assertNotNull($result, 'database can be searched and retrieved from');
     }
 
 }
