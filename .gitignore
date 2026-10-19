@@ -1,2 +1,7 @@
 /vendor/
+.env
 .phpunit.result.cache
+reports/
+test-results/
+__pycache__/
+.pytest_cache/

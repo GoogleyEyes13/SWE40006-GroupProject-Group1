@@ -23,6 +23,7 @@ env:
   ECR_REGISTRY: 174302433391.dkr.ecr.ap-southeast-4.amazonaws.com
   ECR_REPOSITORY: book-library
   PROD_INSTANCE_ID: i-04d2c90c7a0e73710
+  PROD_URL: http://16.27.136.142
 
 jobs:
   promote:
@@ -68,3 +69,8 @@ jobs:
         env:
           IMAGE: ${{ steps.image.outputs.image }}
         run: bash scripts/ssm-deploy.sh "$PROD_INSTANCE_ID" production "$IMAGE"
+
+      - name: Verify live Production
+        env:
+          SHA: ${{ inputs.commit_sha }}
+        run: bash scripts/verify-deployment.sh "$PROD_URL" "$SHA"

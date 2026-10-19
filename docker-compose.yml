@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: book_library
+      POSTGRES_USER: book_library
+      POSTGRES_PASSWORD: local-dev-password
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./database/01_create_tables.sql:/docker-entrypoint-initdb.d/01_create_tables.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U book_library -d book_library"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      APP_ENV: development
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: book_library
+      DB_USER: book_library
+      DB_PASSWORD: local-dev-password
+      DB_SSLMODE: disable
+    volumes:
+      - ./BookManager:/var/www/html
+      - ./database:/opt/book-library/database
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

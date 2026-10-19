@@ -12,4 +12,7 @@ COPY BookManager/ /var/www/html/
 COPY database/ /opt/book-library/database/
 COPY tests/api_smoke.py /opt/book-library/tests/api_smoke.py
 
+ARG APP_VERSION=local
+ENV APP_VERSION=$APP_VERSION
+
 EXPOSE 80

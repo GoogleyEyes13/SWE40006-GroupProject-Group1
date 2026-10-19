@@ -1,7 +1,11 @@
 .git
 .github
+.env
 vendor
 scripts
+reports
+tests/e2e
 composer.json
 composer.lock
 phpunit.xml
+docker-compose.yml

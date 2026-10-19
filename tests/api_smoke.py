@@ -123,16 +123,7 @@ try:
 
 finally:
     if registered:
-        php = (
-            'require "/opt/book-library/database/connection.php";'
-            '$db = connectToDatabase();'
-            '$stmt = $db->prepare("DELETE FROM users WHERE email = :email");'
-            '$stmt->execute(["email" => getenv("SMOKE_EMAIL")]);'
-        )
-
         subprocess.run([
-            "docker", "exec",
-            "-e", f"SMOKE_EMAIL={EMAIL}",
-            "book-library-test",
-            "php", "-r", php
+            "docker", "exec", "book-library-test",
+            "php", "/opt/book-library/database/delete_test_user.php", EMAIL
         ], check=True)

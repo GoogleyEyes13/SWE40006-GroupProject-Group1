@@ -8,12 +8,13 @@ function connectToDatabase(): PDO
     $name = getenv('DB_NAME');
     $user = getenv('DB_USER');
     $password = getenv('DB_PASSWORD');
+    $sslMode = getenv('DB_SSLMODE') ?: 'require';
 
     if (!$host || !$name || !$user || !$password) {
         throw new RuntimeException('Missing database configuration');
     }
 
-    $dsn = "pgsql:host=$host;port=$port;dbname=$name;sslmode=require";
+    $dsn = "pgsql:host=$host;port=$port;dbname=$name;sslmode=$sslMode";
 
     return new PDO($dsn, $user, $password, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

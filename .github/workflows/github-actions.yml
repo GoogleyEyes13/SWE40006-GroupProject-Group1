@@ -22,6 +22,9 @@ env:
   ECR_REPOSITORY: book-library
   TEST_INSTANCE_ID: i-075ec2dbc29efe79e
   PROD_INSTANCE_ID: i-04d2c90c7a0e73710
+  TEST_URL: http://16.50.175.4
+  PROD_URL: http://16.27.136.142
+  E2E_EMAIL: e2e-${{ github.run_id }}-${{ github.run_attempt }}@example.test
 
 jobs:
   deploy:
@@ -53,10 +56,10 @@ jobs:
           done
 
       - name: Run PHPUnit tests
-        run: vendor/bin/phpunit
+        run: vendor/bin/phpunit --log-junit reports/phpunit.xml
 
       - name: Build Docker image
-        run: docker build --pull -t book-library:ci .
+        run: docker build --pull --build-arg APP_VERSION="$GITHUB_SHA" -t book-library:ci .
 
       - name: Smoke test Docker image
         run: |
@@ -112,6 +115,36 @@ jobs:
           IMAGE: ${{ steps.push.outputs.image }}
         run: bash scripts/ssm-deploy.sh "$TEST_INSTANCE_ID" test "$IMAGE"
 
+      - name: Set up Python
+        uses: actions/setup-python@v6.3.0
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: tests/e2e/requirements.txt
+
+      - name: Install end-to-end test dependencies
+        run: |
+          pip install -r tests/e2e/requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Run end-to-end acceptance tests
+        id: e2e
+        env:
+          EXPECTED_VERSION: ${{ github.sha }}
+        run: |
+          pytest tests/e2e \
+            --base-url "$TEST_URL" \
+            --browser chromium \
+            --tracing retain-on-failure \
+            --output reports/e2e-traces \
+            --junitxml reports/e2e.xml
+
+      - name: Remove end-to-end test account
+        if: always() && steps.e2e.outcome != 'skipped'
+        run: |
+          bash scripts/ssm-run.sh "$TEST_INSTANCE_ID" \
+            "docker exec book-library-test php /opt/book-library/database/delete_test_user.php $E2E_EMAIL"
+
       - name: Mark image as tested
         env:
           DIGEST: ${{ steps.push.outputs.digest }}
@@ -144,3 +177,16 @@ jobs:
         env:
           IMAGE: ${{ steps.push.outputs.image }}
         run: bash scripts/ssm-deploy.sh "$PROD_INSTANCE_ID" production "$IMAGE"
+
+      - name: Verify live Production
+        if: vars.AUTO_PROMOTE == 'true'
+        run: bash scripts/verify-deployment.sh "$PROD_URL" "$GITHUB_SHA"
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: test-reports-${{ github.sha }}
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 30
