@@ -57,9 +57,9 @@ function saveUserBook(
 
 function getUserLibrary(PDO $db, int $userId): array
 {
-    if (PHP_SAPI !== 'cli') {
-    throw new RuntimeException('Intentional rollback demonstration');
-    }
+   // if (PHP_SAPI !== 'cli') {
+    //throw new RuntimeException('Intentional rollback demonstration');
+    //}
     $stmt = $db->prepare("
         SELECT
             b.id,
