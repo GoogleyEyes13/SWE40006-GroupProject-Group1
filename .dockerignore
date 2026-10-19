@@ -1,0 +1,7 @@
+.git
+.github
+vendor
+scripts
+composer.json
+composer.lock
+phpunit.xml
