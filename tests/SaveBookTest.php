@@ -30,11 +30,11 @@ class SaveBookTest extends TestCase
         //assign how sql calls are handled
         $statement->expects($this->once())
             ->method('execute')
-            ->with(['key' => $key])
+            ->with(['key' => $key]);
         
         $statement->expects($this->once())
             ->method('fetch')
-            ->willReturn(['key' => $key, 'title' => null])
+            ->willReturn(['key' => $key, 'title' => null]);
 
         //Create fake database connection
         $db = $this->createMock(PDO::class);
@@ -43,6 +43,6 @@ class SaveBookTest extends TestCase
         $result = getBook($db, $statement);
 
         //Assert that test should result in a failure/null
-        $this->assertNull($result)
+        $this->assertNull($result);
     }
 }
