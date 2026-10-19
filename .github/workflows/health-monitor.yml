@@ -1,0 +1,30 @@
+name: BookManager Health Monitor
+
+on:
+    schedule:
+        - cron: '17 */3 * * *'
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+  health-check:
+    name: Check Application Health
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Testing Environment
+        run: |
+          curl --fail --silent --show-error \
+            --retry 2 \
+            --max-time 15 \
+            "http://16.50.175.4/backend/health.php"
+
+      - name: Check Production Environment
+        if: always()
+        run: |
+          curl --fail --silent --show-error \
+            --retry 2 \
+            --max-time 15 \
+            "http://16.27.136.142/backend/health.php"
