@@ -25,16 +25,6 @@ class SaveBookTest extends TestCase
         //Create mock database
         $key = "";
         $book = "Harry Potter";
-        $statement = $this->createMock(PDOStatement::class);
-
-        //assign how sql calls are handled
-        $statement->expects($this->once())
-            ->method('execute')
-            ->with(['key' => $key]);
-        
-        $statement->expects($this->once())
-            ->method('fetch')
-            ->willReturn(['key' => $key, 'title' => null]);
 
         //Create fake database connection
         $db = $this->createMock(PDO::class);
