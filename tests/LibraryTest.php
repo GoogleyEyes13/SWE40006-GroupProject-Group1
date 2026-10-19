@@ -1,10 +1,12 @@
 <?php
 declare(strict_types=1);
 
+//use Illuminate\Foundations\Testing\RefreshDatabase
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ ."/../database/library.php";
 
+//integration test
 class LibraryTest extends TestCase
 {
     public function testGetUserLibrary(): void {
@@ -35,9 +37,6 @@ class LibraryTest extends TestCase
 
         //Create mock database statement calls
         $delstatement = $this->createMock(PDOStatement::class);
-        $delstatement->expects($this->once())
-            ->method('execute')
-            ->willReturn(true);
 
         //configure a mock database behaviour expectations
         $delstatement->expects($this->once())
@@ -47,12 +46,9 @@ class LibraryTest extends TestCase
                 'book_id' => $bookID
             ]);
 
-        $mockdb = $this->createMock(PDO::class);
-        $mockdb->expects($this->once())
-            ->method('prepare')
-            ->willReturn($delstatement);
+        $service = new UserService($delstatement);
 
-        $result = removeUserBook($mockdb, $userID, $bookID);
+        $result = removeUserBook($service, $userID, $bookID);
 
         //Test that a book can be removed from a users library and that no rows are returned
         $this->assertSame(true, $result);
