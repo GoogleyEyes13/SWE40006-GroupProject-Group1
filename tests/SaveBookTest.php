@@ -40,7 +40,7 @@ class SaveBookTest extends TestCase
         $db = $this->createMock(PDO::class);
 
         //Fill parameters for getBook
-        $result = getBook($db, $statement);
+        $result = getBook($db, $key);
 
         //Assert that test should result in a failure/null
         $this->assertNull($result);
