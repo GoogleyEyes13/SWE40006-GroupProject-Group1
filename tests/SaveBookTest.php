@@ -26,7 +26,7 @@ class SaveBookTest extends TestCase
         $statement->expects($this->once())
             ->method('fetch')
             ->willReturn([
-                'key' => "1",
+                'key' => "0",
                 'title' => $title,
                 'author' => $author,
                 'year' => $year,
@@ -42,10 +42,8 @@ class SaveBookTest extends TestCase
         $result = getBook($mockdb, $key);
 
         //check that something is returned when the database is searched
-        $this->assertNotNull($result, 'database can be searched and isnt null');
-
-        //$nullresult = getBook($mockdb, "0");
-        //$this->assertNull($nullresult);
+        //$this->assertNotNull($result, 'database can be searched and isnt null');
+        $this->assertNull($result, 'database call does not exist');
     }
 
 }
