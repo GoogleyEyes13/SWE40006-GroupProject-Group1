@@ -52,7 +52,7 @@ class LibraryTest extends TestCase
             ->method('prepare')
             ->willReturn($delstatement);
 
-        $result = removeUserBook($mockdb, $userID, $bookID)
+        $result = removeUserBook($mockdb, $userID, $bookID);
 
         //Test that a book can be removed from a users library
         $this->assertEqual(0. $result);
