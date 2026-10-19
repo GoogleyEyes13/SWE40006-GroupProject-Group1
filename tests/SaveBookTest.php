@@ -24,7 +24,7 @@ class SaveBookTest extends TestCase
     public function testNullCheck(): void {
         //Create mock database
         $key = "";
-        $book = "Harry Potter"
+        $book = "Harry Potter";
         $statement = $this->createMock(PDOStatement::class);
 
         //assign how sql calls are handled
