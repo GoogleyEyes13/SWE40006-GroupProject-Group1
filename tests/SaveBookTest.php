@@ -37,10 +37,10 @@ class SaveBookTest extends TestCase
             ->method('prepare')
             ->willReturn($statement);
 
-        $result = getBook($mockdb, $statement);
+        $result = getBook($mockdb, $key);
 
         //test that a book can be found in the database (check that the database exists)
-        $this->assertSame($title, $result);
+        $this->assertSame($statement, $result);
         //if a book can be found, check that it can be fetched
     }
 
