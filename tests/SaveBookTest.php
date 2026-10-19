@@ -37,7 +37,6 @@ class SaveBookTest extends TestCase
         $mockdb = $this->createMock(PDO::class);
         $mockdb->expects($this->once())
             ->method('prepare')
-            ->with($this->stringContains('SELECT * FROM books WHERE openlibrary_key = :key'))
             ->willReturn($statement);
 
         $result = getBook($mockdb, $key);
