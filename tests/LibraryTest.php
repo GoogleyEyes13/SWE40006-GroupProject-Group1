@@ -41,8 +41,8 @@ class LibraryTest extends TestCase
 
         //configure a mock database behaviour expectations
         $delstatement->expects($this->once())
-            ->method('fetch')
-            ->willReturn([
+            ->method('delete')
+            ->with([
                 'user_id' => $userID,
                 'book_id' => $bookID
             ]);
@@ -54,7 +54,7 @@ class LibraryTest extends TestCase
 
         $result = removeUserBook($mockdb, $userID, $bookID);
 
-        //Test that a book can be removed from a users library
-        $this->assertSame(0, $result);
+        //Test that a book can be removed from a users library and that no rows are returned
+        $this->assertSame(true, $result);
     }
 }
