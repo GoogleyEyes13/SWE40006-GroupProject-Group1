@@ -42,7 +42,7 @@ class SaveBookTest extends TestCase
         $result = getBook($mockdb, $key);
 
         //check that something is returned when the database is searched
-        $this->assertNotNull($statement, $result);
+        $this->assertNotNull($result, 'database can be searched and isnt null');
     }
 
 
