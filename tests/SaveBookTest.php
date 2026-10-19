@@ -20,6 +20,7 @@ class SaveBookTest extends TestCase
         $statement = $this->createMock(PDOStatement::class);
         $statement->expects($this->once())
             ->method('execute')
+            ->with(['key' => $key])
             ->willReturn(true);
 
         $statement->expects($this->once())
@@ -32,16 +33,17 @@ class SaveBookTest extends TestCase
                 'cover' => $cover
             ]);
 
+        //retrieves the title from the database
         $mockdb = $this->createMock(PDO::class);
         $mockdb->expects($this->once())
             ->method('prepare')
+            ->with($this->stringContains('SELECT title FROM books'))
             ->willReturn($statement);
 
         $result = getBook($mockdb, $key);
 
         //test that a book can be found in the database (check that the database exists)
-        $this->assertSame($statement, $result);
-        //if a book can be found, check that it can be fetched
+        $this->assertEquals($title, $result);
     }
 
 
